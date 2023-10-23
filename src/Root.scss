@@ -1,0 +1,29 @@
+@import url(https://fonts.googleapis.com/css?family=Fira+Sans:100,100italic,200,200italic,300,300italic,regular,italic,500,500italic,600,600italic,700,700italic,800,800italic,900,900italic);
+
+div#Root {
+	display: flex;
+	flex-direction: row;
+	height: 100%;
+	background-color: #c8cbd5;
+
+	& > a {
+		height: 100%;
+		display: flex;
+		flex-grow: 1;
+		justify-content: center;
+		& > span {
+			text-align: center;
+			color: white;
+			font-size: 256px;
+			margin: auto;
+		}
+		&#two {
+			background: url('./assets/root_2d_background.png');
+			background-position: 50%;
+		}
+		&#three {
+			background: #0f0f0f;
+		}
+		text-decoration: none;
+	}
+}
