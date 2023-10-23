@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import 'mathlive';
 import './App.scss';
 import 'mathlive/fonts.css';
@@ -23,40 +23,31 @@ export default function TwoDimensional() {
 
 	const canvas = useRef<HTMLCanvasElement>(null);
 
+	const worker: Worker = useMemo(
+		() =>
+			new Worker('worker.js', {
+				type: 'module',
+			}),
+		[]
+	);
+
 	useEffect(() => {
-		const ce = new ComputeEngine({ numericMode: 'complex' });
-		ce.pushScope();
-		const expr = ce.parse(value);
-		const newCalculatedValues: number[] = [];
-
-		// const variables = [];
-		// if (expr.unknowns.length > variables.length + 1) return;
-
-		const startTime = Date.now();
-
-		console.log(expr.toJSON());
-		for (let x = X_MIN; x <= X_MAX; x += X_STEP) {
-			ce.assign('x', x);
-
-			const numericalValue = expr.N().simplify().N().numericValue;
-			let value = 0;
-			if (numericalValue === null) value = NaN;
-			else if (ce.isComplex(numericalValue)) {
-				value = (numericalValue as Complex).re;
-			} else {
-				value = numericalValue as number;
-			}
-
-			newCalculatedValues.push(value);
+		if (window.Worker) {
+			worker.postMessage({ value, X_MIN, X_MAX, X_STEP });
 		}
-		setCalculatedValues(newCalculatedValues);
-
-		console.log(Date.now() - startTime);
-	}, [value, X_MIN, X_MAX, X_STEP]);
+		console.log('sent!');
+	}, [value, X_MIN, X_MAX, X_STEP, worker]);
 
 	useEffect(() => {
-		const CHUNKS = 10;
+		if (window.Worker) {
+			worker.onmessage = (e) => {
+				setCalculatedValues(e.data);
+				console.log(e.data);
+			};
+		}
+	}, [worker]);
 
+	useEffect(() => {
 		if (!canvas.current) return;
 		const ctx = canvas.current.getContext('2d');
 		if (!ctx) return;
@@ -65,17 +56,12 @@ export default function TwoDimensional() {
 		const X_MULT = width / (X_MAX - X_MIN);
 		const Y_MULT = height / (Y_MAX - Y_MIN);
 		ctx.clearRect(0, 0, width, height);
-		for (let chunk = 0; chunk < CHUNKS; chunk += 1) {
-			ctx.beginPath();
-			ctx.moveTo(X_MIN, height - calculatedValues[chunk]);
-			for (let i = 0; i <= (X_MAX - X_MIN) / CHUNKS / X_STEP; i += 1) {
-				ctx.lineTo(
-					(i * X_STEP + chunk) * X_MULT,
-					height - calculatedValues[i + chunk]
-				);
-			}
-			ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(X_MIN, height - calculatedValues[0]);
+		for (let i = 0; i <= (X_MAX - X_MIN) / X_STEP; i += 1) {
+			ctx.lineTo(i * X_STEP * X_MULT, height - calculatedValues[i]);
 		}
+		ctx.stroke();
 	}, [calculatedValues, X_MIN, X_MAX, X_STEP, Y_MAX, Y_MIN]);
 
 	return (
