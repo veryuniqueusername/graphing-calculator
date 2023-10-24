@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import 'mathlive';
 import './App.scss';
 import 'mathlive/fonts.css';
-import { ComputeEngine } from '@cortex-js/compute-engine';
 
 export type Complex = {
 	re: number;
@@ -10,7 +9,7 @@ export type Complex = {
 };
 
 export default function TwoDimensional() {
-	const [value, setValue] = useState('');
+	const [latex, setLatex] = useState('');
 	const [mathWidth, setMathWidth] = useState(400);
 	const [isResizing, SetisResizing] = useState(false);
 	const [calculatedValues, setCalculatedValues] = useState<number[]>([]);
@@ -23,31 +22,24 @@ export default function TwoDimensional() {
 
 	const canvas = useRef<HTMLCanvasElement>(null);
 
-	const worker: Worker = useMemo(
-		() =>
-			new Worker('worker.js', {
+	useEffect(() => {
+		if (window.Worker) {
+			const myWorker = new Worker(new URL('./worker.ts', import.meta.url), {
 				type: 'module',
-			}),
-		[]
-	);
+			});
 
-	useEffect(() => {
-		if (window.Worker) {
-			worker.postMessage({ value, X_MIN, X_MAX, X_STEP });
-		}
-		console.log('sent!');
-	}, [value, X_MIN, X_MAX, X_STEP, worker]);
+			myWorker.postMessage({ latex, X_MIN, X_MAX, X_STEP });
 
-	useEffect(() => {
-		if (window.Worker) {
-			worker.onmessage = (e) => {
+			myWorker.onmessage = function (e) {
 				setCalculatedValues(e.data);
-				console.log(e.data);
 			};
 		}
-	}, [worker]);
+	}, [X_MAX, X_MIN, X_STEP, latex]);
 
 	useEffect(() => {
+		const startTime = Date.now();
+		console.log(calculatedValues);
+
 		if (!canvas.current) return;
 		const ctx = canvas.current.getContext('2d');
 		if (!ctx) return;
@@ -59,9 +51,14 @@ export default function TwoDimensional() {
 		ctx.beginPath();
 		ctx.moveTo(X_MIN, height - calculatedValues[0]);
 		for (let i = 0; i <= (X_MAX - X_MIN) / X_STEP; i += 1) {
-			ctx.lineTo(i * X_STEP * X_MULT, height - calculatedValues[i]);
+			ctx.lineTo(
+				i * X_STEP * X_MULT,
+				height - (calculatedValues[i] - Y_MIN) * Y_MULT
+			);
 		}
 		ctx.stroke();
+
+		console.log('Time: ' + (Date.now() - startTime));
 	}, [calculatedValues, X_MIN, X_MAX, X_STEP, Y_MAX, Y_MIN]);
 
 	return (
@@ -77,10 +74,10 @@ export default function TwoDimensional() {
 				<math-field
 					class="math-field"
 					onInput={(evt: React.ChangeEvent<HTMLInputElement>) =>
-						setValue(evt.target.value)
+						setLatex(evt.target.value)
 					}
 				>
-					{value}
+					{latex}
 				</math-field>
 			</div>
 			<div
