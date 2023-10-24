@@ -37,9 +37,6 @@ export default function TwoDimensional() {
 	}, [X_MAX, X_MIN, X_STEP, latex]);
 
 	useEffect(() => {
-		const startTime = Date.now();
-		console.log(calculatedValues);
-
 		if (!canvas.current) return;
 		const ctx = canvas.current.getContext('2d');
 		if (!ctx) return;
@@ -57,8 +54,6 @@ export default function TwoDimensional() {
 			);
 		}
 		ctx.stroke();
-
-		console.log('Time: ' + (Date.now() - startTime));
 	}, [calculatedValues, X_MIN, X_MAX, X_STEP, Y_MAX, Y_MIN]);
 
 	return (
