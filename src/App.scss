@@ -26,7 +26,7 @@ body,
 .resize-handle {
 	position: absolute;
 	top: 0;
-	width: 15px;
+	width: 30px;
 	height: 100%;
 	opacity: 0;
 	&:hover {
@@ -39,8 +39,11 @@ body,
 	position: absolute;
 	height: 100%;
 	background-color: #ececec;
-	display: flex;
 	z-index: 0;
+	display: flex;
+	& > canvas {
+		position: absolute;
+	}
 }
 
 .math-field {

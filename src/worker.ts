@@ -18,7 +18,7 @@ onmessage = (e) => {
 	const variables = [];
 	if (expr.unknowns.length > variables.length + 1) return;
 
-	for (let x = X_MIN; x <= X_MAX; x += X_STEP) {
+	for (let x = X_MIN; x <= X_MAX; x += (X_MAX - X_MIN) / X_STEP) {
 		ce.assign('x', x);
 
 		const numericalValue = expr.N().simplify().N().numericValue;
