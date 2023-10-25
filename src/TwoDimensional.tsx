@@ -157,6 +157,23 @@ export default function TwoDimensional() {
 					height={window.innerHeight}
 					style={{ width: window.innerWidth - mathWidth }}
 				/>
+				{/* Cover to zoom and move */}
+				<div
+					onWheel={(event) => {
+						set_X_MAX(
+							(X_MAX) => X_MAX * (1 + event.deltaY / window.innerHeight)
+						);
+						set_X_MIN(
+							(X_MIN) => X_MIN * (1 + event.deltaY / window.innerHeight)
+						);
+						set_Y_MAX(
+							(Y_MAX) => Y_MAX * (1 + event.deltaY / window.innerHeight)
+						);
+						set_Y_MIN(
+							(Y_MIN) => Y_MIN * (1 + event.deltaY / window.innerHeight)
+						);
+					}}
+				/>
 			</div>
 		</div>
 	);
